@@ -9,16 +9,16 @@ Turns [mattpocock/skills][upstream] into a dsh plugin.
 | | |
 |---|---|
 | Upstream | [github.com/mattpocock/skills][upstream] (MIT), synced daily |
-| Contents | 38 skills, one directory each: `skills/<name>/SKILL.md` plus its own resources |
+| Contents | One directory per skill: `skills/<name>/SKILL.md` plus its own resources |
 | Adds | one Host row registering a `ctx.skills` provider — writes nothing to any skills root |
 | DSH | `>=0.2.0-rc.1 <0.3.0-0` |
 | Runtime deps | none |
 
 Upstream's `engineering` / `productivity` / `misc` / `in-progress` buckets are
 flattened away: nothing consumes them, and skill names are unique across them.
-Skills carry rank 600, so a project-local skill of the same name still wins. The
-23 skills upstream marks `disable-model-invocation` stay reachable only by
-`/name`, never by the model. Only `skills/` and upstream's `LICENSE` are
+Skills carry rank 600, so a project-local skill of the same name still wins. Skills
+upstream marks `disable-model-invocation` stay reachable only by `/name`, never
+by the model. Only `skills/` and upstream's `LICENSE` are
 vendored — not their docs, CI, or plugin metadata.
 
 ## Who needs this
@@ -30,7 +30,7 @@ Codex's plugin route keeps the skills inside Codex's own storage, which a
 Harness session never reads. Harness only discovers skills under
 `<project>/.dsh/skills`, `<project>/.agents/skills`, `~/.dsh/skills`, and
 `~/.agents/skills`. Copying the skills into one of those works, but it leaves
-the same 38 skills in two places with two update paths that drift apart.
+the same skills in two places with two update paths that drift apart.
 
 This bundle is the alternative: DSH gets the skills without a second copy.
 
@@ -59,7 +59,7 @@ dsh plugin --profile <profile> add /absolute/path/to/dsh-plugin-mattpocock-skill
 
 Then enable the bundle once — Web UI **Plugins → Bundles**, or add it to
 `dsh.profile.bundles` — and restart the Harness, since a new module generation
-only loads on boot. All 38 skills then appear in the session catalog, reachable
+only loads on boot. Every skill then appears in the session catalog, reachable
 with the `skill` tool or as `/name` commands.
 
 ```bash

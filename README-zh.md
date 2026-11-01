@@ -9,14 +9,14 @@
 | | |
 |---|---|
 | 上游 | [github.com/mattpocock/skills][upstream]（MIT），每日同步 |
-| 内容 | 38 个技能，每个一个目录：`skills/<name>/SKILL.md` 及其自带资源 |
+| 内容 | 每个技能一个目录：`skills/<name>/SKILL.md` 及其自带资源 |
 | 新增 | 一行 Host 插件，注册 `ctx.skills` provider —— 不写入任何技能根目录 |
 | DSH | `>=0.2.0-rc.1 <0.3.0-0` |
 | 运行时依赖 | 无 |
 
 上游的 `engineering` / `productivity` / `misc` / `in-progress` 分桶已扁平化去掉：
 没有任何东西消费它，且技能名本就跨桶唯一。技能携带优先级 600，因此项目内同名技能仍然胜出。
-上游标记 `disable-model-invocation` 的 23 个技能只能通过 `/名称` 调用，模型无法自行触达。
+上游标记 `disable-model-invocation` 的技能只能通过 `/名称` 调用，模型无法自行触达。
 只 vendor `skills/` 与上游 `LICENSE` —— 不含上游的文档、CI 与插件元数据。
 
 ## 谁需要它
@@ -26,7 +26,7 @@
 
 Codex 的插件方式把技能存在它自己的存储里，Harness 会话读不到。Harness 只从
 `<project>/.dsh/skills`、`<project>/.agents/skills`、`~/.dsh/skills`、
-`~/.agents/skills` 发现技能。把技能复制进其中一个是可行的，但这会让同样的 38 个技能
+`~/.agents/skills` 发现技能。把技能复制进其中一个是可行的，但这会让同样的技能
 存在于两处、各有更新路径，且必然逐渐不一致。
 
 本 bundle 是另一种选择：DSH 无需第二份副本即可获得这些技能。
@@ -54,7 +54,7 @@ dsh plugin --profile <profile> add /absolute/path/to/dsh-plugin-mattpocock-skill
 ```
 
 然后启用一次 bundle —— Web 界面 **插件 → Bundle**，或写入 `dsh.profile.bundles` ——
-并重启 Harness，因为新的模块代际只在启动时加载。此后全部 38 个技能出现在会话目录中，
+并重启 Harness，因为新的模块代际只在启动时加载。此后全部技能出现在会话目录中，
 可通过 `skill` 工具或 `/名称` 命令调用。
 
 ```bash

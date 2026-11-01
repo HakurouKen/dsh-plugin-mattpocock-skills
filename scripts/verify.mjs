@@ -246,7 +246,8 @@ function vendoredSkills() {
     const raw = readFileSync(locator, 'utf8')
     const fence = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---/.exec(raw)
     const declared = fence === null ? '' : (/^name[ \t]*:[ \t]*(.+)$/m.exec(fence[1])?.[1] ?? '').trim()
-    entries.push({ name: declared || entry.name, directory: entry.name })
+    const userOnly = fence !== null && /^disable-model-invocation[ \t]*:[ \t]*true[ \t]*$/im.test(fence[1])
+    entries.push({ name: declared || entry.name, directory: entry.name, userOnly })
   }
   return entries
 }
@@ -267,7 +268,8 @@ check('provider: every upstream skill is in the catalog', () => {
   const expected = vendored.map((skill) => skill.name).sort()
   equal(names.length, expected.length, 'catalog size')
   equal(JSON.stringify(names), JSON.stringify(expected), 'catalog names')
-  equal(catalog.length, 38, 'the pinned upstream commit has 38 skills')
+  equal(catalog.length, manifest.skillCount, 'catalog size should match the manifest')
+  equal(vendored.length, manifest.skillCount, 'the manifest should describe the vendored tree')
 })
 
 check('provider: catalog is sorted by name and free of duplicates', () => {
@@ -306,22 +308,21 @@ check('provider: bodies match the vendored files', async () => {
 })
 
 check('provider: user-invoked upstream skills stay user-only', () => {
-  const userOnly = catalog.filter((skill) => !skill.invocation.modelInvocable).map((skill) => skill.name)
-  equal(userOnly.length, 23, 'upstream marks 23 skills disable-model-invocation')
-  for (const skillName of ['ask-matt', 'setup-matt-pocock-skills', 'handoff']) {
-    const skill = catalog.find((candidate) => candidate.name === skillName)
-    assert(skill !== undefined, `${skillName} should be catalogued`)
-    equal(skill.invocation.modelInvocable, false, `${skillName} should be user-invoked only`)
-    equal(skill.invocation.userInvocable, true, `${skillName} should stay user-invocable`)
+  // Derived from upstream's frontmatter, so skills appearing or disappearing
+  // upstream cannot make this assertion stale.
+  const expected = vendored.filter((skill) => skill.userOnly).map((skill) => skill.name).sort()
+  const actual = catalog.filter((skill) => !skill.invocation.modelInvocable).map((skill) => skill.name).sort()
+  equal(JSON.stringify(actual), JSON.stringify(expected), 'user-only set should match upstream')
+  for (const skill of catalog) {
+    if (skill.invocation.modelInvocable) continue
+    equal(skill.invocation.userInvocable, true, `${skill.name} should stay user-invocable`)
   }
 })
 
 check('provider: model-invoked skills stay reachable by the model', () => {
-  for (const skillName of ['tdd', 'code-review', 'diagnosing-bugs', 'writing-for-agents']) {
-    const skill = catalog.find((candidate) => candidate.name === skillName)
-    assert(skill !== undefined, `${skillName} should be catalogued`)
-    equal(skill.invocation.modelInvocable, true, `${skillName} should be model-invoked`)
-  }
+  const expected = vendored.filter((skill) => !skill.userOnly).map((skill) => skill.name).sort()
+  const actual = catalog.filter((skill) => skill.invocation.modelInvocable).map((skill) => skill.name).sort()
+  equal(JSON.stringify(actual), JSON.stringify(expected), 'model-invocable set should match upstream')
 })
 
 check('provider: uses the bundled rank and attributes the upstream commit', () => {
@@ -345,7 +346,7 @@ check('provider: a custom skillRoot is honored', async () => {
   // one subdirectory per skill, without any bucket layer.
   const isolated = await activate({ skillRoot: VENDOR_DIR, watch: false })
   const list = await isolated.provider.list()
-  equal(list.length, 38, 'the vendored root should yield every skill')
+  equal(list.length, catalog.length, 'the vendored root should yield every skill')
   // Assert the shape, not a version literal: the vendored version moves with
   // upstream, and pinning it here would fail the daily sync on every release.
   const versioned = `mattpocock/skills@${manifest.upstream.version}`
@@ -355,7 +356,7 @@ check('provider: a custom skillRoot is honored', async () => {
 
 check('provider: a broken SKILL.md is skipped, not fatal', async () => {
   const isolated = await activate({ watch: false })
-  equal((await isolated.provider.list()).length, 38, 'baseline catalog size')
+  equal((await isolated.provider.list()).length, catalog.length, 'baseline catalog size')
   await isolated.dispose()
 })
 
@@ -594,7 +595,7 @@ check('config: the shipped empty row validates under either schema backend', () 
 check('config: apply() accepts exactly what the schema produced', async () => {
   const value = Config['~standard'].validate(undefined).value
   const isolated = await activate(value)
-  equal((await isolated.provider.list()).length, 38, 'a default row should still register every skill')
+  equal((await isolated.provider.list()).length, catalog.length, 'a default row should still register every skill')
   await isolated.dispose()
 })
 
