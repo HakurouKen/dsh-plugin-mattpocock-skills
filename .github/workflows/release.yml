@@ -198,27 +198,6 @@ jobs:
             echo "tagged ${tag}"
           fi
 
-      - name: Inspect OIDC claims (diagnostic)
-        if: steps.plan.outputs.publish == 'true'
-        run: |
-          set -euo pipefail
-          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-            echo "::error::ACTIONS_ID_TOKEN_REQUEST_URL is absent: id-token: write was not granted"
-            exit 1
-          fi
-          response=$(curl -sS -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org")
-          # Print only the claim set npm matches on, never the token itself.
-          printf '%s' "$response" | node -e '
-            let raw = ""
-            process.stdin.on("data", (c) => (raw += c)).on("end", () => {
-              const claims = JSON.parse(Buffer.from(JSON.parse(raw).value.split(".")[1], "base64url").toString())
-              const pick = ["repository", "repository_owner", "repository_visibility", "job_workflow_ref", "workflow", "workflow_ref", "environment", "ref", "event_name"]
-              const out = Object.fromEntries(pick.map((k) => [k, claims[k] ?? null]))
-              process.stdout.write(JSON.stringify(out, null, 2) + "\n")
-            })
-          '
-
       - name: Publish to npm
         if: steps.plan.outputs.publish == 'true'
         # No token secret: npm exchanges this job's OIDC identity for a
@@ -236,7 +215,7 @@ jobs:
             exit 0
           fi
 
-          if ! npm publish --provenance --access public --registry https://registry.npmjs.org --loglevel verbose; then
+          if ! npm publish --provenance --access public --registry https://registry.npmjs.org; then
             echo "::error::npm publish failed. Trusted publishing must be configured on npmjs.com for ${name}: Settings -> Trusted Publisher -> GitHub Actions, repository owner HakurouKen, repository dsh-plugin-mattpocock-skills, workflow file release.yml, and publish permission enabled. The first publish of a new package cannot use trusted publishing and must be done manually."
             exit 1
           fi
