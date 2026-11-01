@@ -215,7 +215,7 @@ jobs:
             exit 0
           fi
 
-          if ! npm publish --provenance --access public --registry https://registry.npmjs.org; then
+          if ! npm publish --provenance --access public --registry https://registry.npmjs.org --loglevel verbose; then
             echo "::error::npm publish failed. Trusted publishing must be configured on npmjs.com for ${name}: Settings -> Trusted Publisher -> GitHub Actions, repository owner HakurouKen, repository dsh-plugin-mattpocock-skills, workflow file release.yml, and publish permission enabled. The first publish of a new package cannot use trusted publishing and must be done manually."
             exit 1
           fi
