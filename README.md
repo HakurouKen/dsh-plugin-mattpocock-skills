@@ -83,9 +83,10 @@ that commit carries one, otherwise the commit SHA, never a version we manage.
 A running Harness picks up a re-sync without a restart; only `lib/` changes need
 one.
 
-`.github/workflows/sync-skills.yml` runs the same sync at **00:00 UTC**, commits
-only `skills/`, and does so only after all 44 checks pass — a day with no
-upstream change commits nothing.
+`.github/workflows/release.yml` runs that sync at **00:00 UTC** and then decides
+the version in the same job. Syncing and releasing share one run so the tree is
+verified once and committed once; a day with no upstream change commits nothing
+and publishes nothing.
 
 ### Verify
 
@@ -93,9 +94,9 @@ upstream change commits nothing.
 node scripts/verify.mjs
 ```
 
-44 checks over the frontmatter reader, the registry's validators, every skill's
-catalog entry and loaded body, the bundle metadata, and the sync script's exit
-codes.
+The checks cover the frontmatter reader, the registry's validators, every
+skill's catalog entry and loaded body, the bundle metadata, the sync and release
+scripts' contracts, and the workflow's version policy.
 
 ### Release
 

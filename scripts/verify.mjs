@@ -16,7 +16,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -504,6 +504,20 @@ check('release: the version policy is documented in the workflow', () => {
   assert(!workflow.includes('NPM_TOKEN'), 'the release workflow must not depend on an npm token secret')
   assert(/npm install -g npm@\^?11\./.test(workflow), 'trusted publishing needs npm >= 11.5.1, newer than Node 20 ships')
   assert(workflow.includes('npm publish --provenance'), 'publishing should request provenance')
+  // One workflow owns the whole chain: a separate sync workflow would need a
+  // workflow_run handoff and repeat checkout, install, and verification daily.
+  assert(/^\s+schedule:/m.test(workflow), 'the release workflow should own the daily schedule')
+  assert(/cron:\s*'0 0 \* \* \*'/.test(workflow), 'it should run daily at 00:00 UTC')
+  assert(workflow.includes('scripts/sync-skills.mjs'), 'it should vendor upstream itself')
+  assert(
+    !existsSync(join(PACKAGE_DIR, '.github', 'workflows', 'sync-skills.yml')),
+    'syncing must not live in a second workflow',
+  )
+  // The filename is what npm trusted publishing binds to.
+  assert(
+    existsSync(join(PACKAGE_DIR, '.github', 'workflows', 'release.yml')),
+    'the trusted publisher is configured for release.yml, so that filename must stay',
+  )
 })
 
 // ---------------------------------------------------------------------------

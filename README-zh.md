@@ -75,8 +75,9 @@ node scripts/sync-skills.mjs --check        # skills/ 过期时以退出码 1 �
 
 运行中的 Harness 无需重启即可感知重新同步；只有 `lib/` 的改动用得着重启。
 
-`.github/workflows/sync-skills.yml` 在 **00:00 UTC** 执行同样的同步，只提交 `skills/`，
-且仅在 44 项检查全部通过后才提交 —— 上游没有变化的那天不产生任何提交。
+`.github/workflows/release.yml` 在 **00:00 UTC** 执行该同步，并在同一个 job 内决定版本。
+同步与发布合并为一次运行，因此目录树只校验一次、只提交一次；上游没有变化的那天既不产生
+提交，也不发布任何版本。
 
 ### 校验
 
@@ -84,8 +85,8 @@ node scripts/sync-skills.mjs --check        # skills/ 过期时以退出码 1 �
 node scripts/verify.mjs
 ```
 
-44 项检查，覆盖 frontmatter 解析器、注册表校验器、每个技能的目录条目与加载出的正文、
-bundle 元数据，以及同步脚本的退出码。
+检查覆盖 frontmatter 解析器、注册表校验器、每个技能的目录条目与加载出的正文、bundle
+元数据、同步与发布脚本的契约，以及 workflow 的版本策略。
 
 ### 发布
 
