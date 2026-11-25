@@ -3,10 +3,10 @@
   "upstream": {
     "repository": "https://github.com/mattpocock/skills.git",
     "requestedRef": null,
-    "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
-    "commitDate": "2026-11-19T13:34:58Z",
-    "version": "abeeaf95660b"
+    "commit": "d65391149dbb5fe76478e76fa8d5122b2aa5a70e",
+    "commitDate": "2026-11-24T14:43:03Z",
+    "version": "d65391149dbb"
   },
-  "syncedAt": "2026-11-20T00:25:46.286Z",
+  "syncedAt": "2026-11-25T00:27:55.931Z",
   "skillCount": 39
 }
